@@ -1,48 +1,259 @@
-# TransferWallet
+# TransferWallet — Crypto + Fiat Payments Prototype
 
-![image](https://github.com/user-attachments/assets/30323e25-0c36-430b-ac38-61ff472e334b)
+Fintech / wallet **engineering prototype** exploring a unified consumer interface for crypto wallets, fiat payments, transfers, and multi-provider payment flows.
 
+The old README described a broad Revolut-like platform with Wise, PayPal, SBP, Ethereum, TRON, Stripe, low-fee conversion, MFA, databases, and production-grade security as if those systems were already integrated. The current repository contains several real implementation experiments—most notably TRON wallet logic and Stripe service code—but it is **not a complete regulated payment platform**.
 
-The project aims to integrate payment systems for physical persons, enabling fast, secure, and low-cost transactions through various APIs. It focuses on offering a seamless user experience with support for multi-currency accounts, instant transfers, and low conversion fees. The project involves using platforms like Revolut, Wise, PayPal, and Russia's SBP, while ensuring high levels of security, including encryption and multi-factor authentication. Additionally, it addresses error handling, logging, and scalability to support growing user demands. The goal is to create a reliable, easy-to-use service for sending and receiving payments.
+## What is represented in the repository
 
+- React / Vite payment UI
+- TRON / TronWeb integration
+- Browser wallet detection
+- TRON account creation experiment
+- TRX balance lookup
+- Stripe client-side helper
+- Stripe server-side service modules
+- Payment-intent route concepts
+- Stripe webhook-handling concepts
+- Order / payment API modules
+- Wallet / payment service abstractions
+- Multi-step payment / transfer UI concepts
 
+## Tech stack
 
-![image](https://github.com/user-attachments/assets/e146780e-3d29-4c4f-b36d-73da5e3847bc)
+- React 18
+- TypeScript
+- Vite 5
+- TronWeb 5
+- Stripe Node SDK 14
+- Tailwind CSS
+- Lucide React
 
+## TRON wallet implementation
 
+`src/services/tronWeb.ts` initializes TronWeb either from a browser wallet extension or from a configured public TRON node:
 
-### Project Description: Cryptocurrency and Fiat Payment Platform
+```text
+window.tronWeb
+      |
+      +-- available -> use injected wallet
+      |
+      `-- unavailable -> create TronWeb(fullHost)
+```
 
-This project aims to create a financial platform similar to **Revolut**, enabling seamless transactions in both **cryptocurrencies** and **fiat currencies**. The platform will allow users to create wallets, perform currency conversions, and manage payments through various payment systems.
+The service currently implements:
 
-#### Key Features:
-1. **Wallet Management**:
-   - Users can create cryptocurrency wallets (e.g., **TRON**, **Ethereum**) and manage their funds.
-   - Secure private and public key management for wallet creation and transactions.
-   
-2. **Currency Conversion**:
-   - Real-time conversion between cryptocurrencies and fiat currencies (USD, EUR, etc.), using external APIs for market rates (e.g., **CoinGecko**, **CoinMarketCap**).
-   - Crypto-to-crypto swapping through decentralized exchanges or smart contracts.
+```text
+createWallet()
+getBalance(address)
+```
 
-3. **Fiat Transfers**:
-   - Integration with payment systems like **Stripe** and **PayPal** to enable deposits, withdrawals, and card payments with low fees.
-   - Ability to convert between different fiat currencies (USD, EUR, etc.) with minimal conversion costs.
+### Important key-management issue
 
-4. **Security**:
-   - SSL/TLS encryption for secure data transmission.
-   - Two-factor authentication (2FA) for added security.
-   - Protection against fraud and theft with advanced security measures for wallet keys and personal information.
+`createWallet()` calls:
 
-5. **User Interface**:
-   - A clean and intuitive web and mobile interface (using frameworks like **React** or **Angular**) for users to view balances, perform transactions, and exchange currencies.
-   - Multi-language and multi-currency support to cater to international users.
+```text
+tronWeb.createAccount()
+```
 
-#### Technical Stack:
-- **Backend**: Node.js, Express, TRON/Web3.js for blockchain interaction, payment gateway APIs (Stripe, PayPal).
-- **Frontend**: React, Vue.js, or Angular for the web, React Native for mobile apps.
-- **Blockchain**: Ethereum, TRON for cryptocurrency wallets and transactions.
-- **Databases**: MongoDB or PostgreSQL for user data and transaction records.
+in browser-accessible application code.
 
-#### Goal:
-The goal is to create a secure, easy-to-use platform that allows users to manage their finances with both cryptocurrencies and traditional currencies, providing a seamless experience for digital asset management, currency exchange, and payments.
+That returns account credentials including private-key material to the client runtime.
 
+Generating a wallet is not the same as safely managing one. A production consumer wallet needs an explicit key-custody model covering:
+
+- secure key generation;
+- encryption at rest;
+- backup / recovery;
+- seed phrase handling;
+- device compromise;
+- transaction signing;
+- phishing protection;
+- address verification;
+- key export / import;
+- account deletion / recovery semantics.
+
+Do not persist raw private keys in LocalStorage or transmit them to an application backend without a deliberately designed custody model.
+
+## Stripe implementation
+
+The repository contains two different Stripe-oriented layers.
+
+### Browser helper
+
+`src/services/stripe.ts` expects Stripe.js to exist on `window.Stripe`, accepts a publishable key, and calls a relative backend route for payment-intent creation.
+
+### Server-oriented modules
+
+Under `src/services/stripe/`, the project contains Node-style Stripe code using:
+
+```env
+STRIPE_SECRET_KEY=...
+```
+
+and functions for:
+
+```text
+create payment intent
+confirm payment
+cancel payment
+webhook verification / handling
+```
+
+`src/api/payment.ts` also defines Express router concepts for payment creation and webhook events.
+
+## Critical runtime mismatch: Vite package vs Express API code
+
+The root package is a Vite frontend and its dependencies do **not** include Express.
+
+However, `src/api/payment.ts` imports:
+
+```text
+express
+```
+
+and defines an Express router.
+
+There is also no root server start script that mounts these routers as a production backend.
+
+Therefore the current Stripe server code is **backend architecture / implementation fragments**, not a runnable API merely because the files exist.
+
+Before documenting Stripe payments as working end-to-end:
+
+1. add a real server / serverless runtime;
+2. add the required backend dependencies;
+3. mount payment routes intentionally;
+4. keep `STRIPE_SECRET_KEY` server-side only;
+5. configure raw-body webhook parsing correctly;
+6. test Stripe signature verification;
+7. persist payment / order state durably;
+8. implement idempotency and reconciliation.
+
+## Route mismatch to verify
+
+The browser helper calls:
+
+```text
+/api/create-payment-intent
+```
+
+while the Express router shown in `src/api/payment.ts` defines:
+
+```text
+/create-payment
+```
+
+Unless another route layer maps those names, the client and server fragments do not currently describe the same endpoint.
+
+Align the API contract before expecting the payment flow to work.
+
+## Payment success / failure handling is incomplete
+
+The current webhook route calls placeholder handlers where successful and failed payments are only logged.
+
+A real financial system needs server-authoritative state transitions such as:
+
+```text
+provider event
+    |
+    v
+signature verification
+    |
+    v
+idempotent payment update
+    |
+    +-- ledger / transaction record
+    +-- order state
+    +-- notification
+    `-- reconciliation evidence
+```
+
+Console logging is not a financial ledger.
+
+## Providers mentioned in the old README
+
+The historical README referenced platforms such as:
+
+- Revolut;
+- Wise;
+- PayPal;
+- Russia's SBP;
+- Ethereum;
+- CoinGecko / CoinMarketCap;
+- Stripe.
+
+The current root package directly includes **Stripe** and **TronWeb**.
+
+Do not claim active Wise, PayPal, SBP, Ethereum, or live FX integrations unless the corresponding code / credentials / backend paths are actually present and tested.
+
+## Regulatory / compliance boundary
+
+A service that stores money, executes transfers, converts currencies, or holds cryptocurrency can trigger substantial legal / compliance requirements depending on jurisdiction and operating model.
+
+A real product may need, among other things:
+
+- licensed payment / e-money partners;
+- KYC / AML;
+- sanctions screening;
+- transaction monitoring;
+- fraud prevention;
+- PCI scope analysis;
+- consumer disclosures;
+- chargeback / dispute workflows;
+- custody analysis;
+- tax / reporting obligations;
+- data-protection controls;
+- audit trails.
+
+This repository is a technical prototype and should not be presented as a licensed financial service.
+
+## Security requirements
+
+Before real-money testing:
+
+- separate browser and server code;
+- never expose Stripe secret keys client-side;
+- establish a wallet key-custody model;
+- authenticate users;
+- authorize every payment / transfer operation;
+- add server-side amount / currency validation;
+- implement idempotency;
+- verify provider webhooks;
+- add audit history;
+- protect against replay / duplicate requests;
+- add rate limits;
+- define secrets management;
+- test failure / recovery behavior.
+
+## Local development
+
+### Frontend
+
+```bash
+git clone https://github.com/shikakker/TransferWallet.git
+cd TransferWallet
+npm install
+npm run dev
+```
+
+Build / lint / preview:
+
+```bash
+npm run lint
+npm run build
+npm run preview
+```
+
+The root project currently launches the Vite frontend only. The server-oriented Stripe modules need their own configured runtime before they can be tested as an API.
+
+## Current status
+
+**Advanced fintech integration prototype with partial TRON and Stripe implementation.** TRON wallet / balance logic and meaningful Stripe service / webhook code are present, but the repository does not yet provide a coherent full-stack runtime, secure wallet custody, end-to-end payment state, or the broader banking integrations described by the old README.
+
+## Product intent
+
+TransferWallet explores the difficult product boundary between a simple “send money” UI and the many systems required behind it: wallet identity, payment providers, blockchain networks, conversion, payment state, and security. Its strongest portfolio value is the progression from broad fintech concept toward concrete Stripe / TRON integration experiments—not a claim that a Revolut-class financial platform is already implemented.
+
+## License
+
+See repository files for licensing information and review Stripe / TRON SDK and provider terms separately.
