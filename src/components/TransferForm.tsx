@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Send, AlertCircle } from 'lucide-react';
 
 const TOKENS = ['TRX', 'USDT', 'BTT', 'WIN', 'JST'];
@@ -8,7 +8,7 @@ export function TransferForm() {
   const [amount, setAmount] = useState('');
   const [token, setToken] = useState('TRX');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     // Demo only - would integrate with blockchain here
     console.log('Transfer:', { address, amount, token });
