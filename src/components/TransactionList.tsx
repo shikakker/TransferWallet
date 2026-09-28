@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
 import { Transaction } from '../types';
 
