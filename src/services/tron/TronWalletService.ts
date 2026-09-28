@@ -1,4 +1,4 @@
-import TronWeb from 'tronweb';
+import { TronWeb } from 'tronweb';
 import { logger } from '../../utils/logger';
 import { encryptPrivateKey, decryptPrivateKey } from '../../utils/crypto';
 import { TronWallet, WalletCredentials } from '../../types/tron';
