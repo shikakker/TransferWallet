@@ -1,9 +1,9 @@
-import TronWeb from 'tronweb';
+import { TronWeb } from 'tronweb';
 import { TRON_CONFIG } from '../config/tron';
 
 class TronWebService {
   private static instance: TronWebService;
-  private tronWeb: typeof TronWeb | null = null;
+  private tronWeb: TronWeb | null = null;
 
   private constructor() {}
 
