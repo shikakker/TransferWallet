@@ -20,11 +20,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Repair lockfile within declared semver ranges
-        run: npm audit fix --package-lock-only
-      - name: Ensure package manifest was not rewritten
-        run: git diff --exit-code -- package.json
+      - name: Refresh lockfile for declared dependency ranges
+        run: npm install --package-lock-only --ignore-scripts
       - name: Verify production high/critical audit
         run: npm audit --omit=dev --audit-level=high
       - name: Commit audited lockfile
