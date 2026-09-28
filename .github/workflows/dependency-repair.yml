@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Refresh lockfile for declared dependency ranges
+      - name: Refresh lockfile for TronWeb 6 security migration
         run: npm install --package-lock-only --ignore-scripts
       - name: Verify production high/critical audit
         run: npm audit --omit=dev --audit-level=high
