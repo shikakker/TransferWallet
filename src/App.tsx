@@ -1,4 +1,3 @@
-import React from 'react';
 import { WalletCard } from './components/WalletCard';
 import { TransferForm } from './components/TransferForm';
 import { TransactionList } from './components/TransactionList';
