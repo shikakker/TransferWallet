@@ -1,4 +1,5 @@
 name: Runtime dependency prune
+# One-shot validation after stale prototype test cleanup
 
 on:
   push:
