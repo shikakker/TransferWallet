@@ -79,3 +79,10 @@ The temporary write-capable workflow was removed after verification. Permanent Q
 - Broken unreachable prototype modules remain recoverable from Git history.
 - No real wallet, Stripe account, Tron transaction, credential, payment, billing action, merge or production promotion was performed.
 - **Status: PARTIAL** until exact-head read-only Quality and hosted browser/preview verification pass.
+
+## 2026-10-12 — working offline demo transfer
+
+- **P1 reproduced:** `TransferForm` was titled `Send Tokens` but only ran `console.log('Transfer:', {address, amount, token})`, never validated amounts, updated wallet balances, wrote history or displayed success/error. It also encouraged entry/logging of real TRON addresses despite having no wallet functionality.
+- **Test-first implementation:** `src/lib/demoTransfer.ts` uses fixed fictional recipients, available mock token list, strict positive ≤6-decimal amount syntax, integer micro-unit arithmetic, insufficient-balance rejection and immutable mock balance/history updates. Unsupported token/address/scientific notation and 0/negative/overspend are denied. New `tests/demo-transfer.test.mjs` tests exact balances, repeated spending, input and no-provider boundary; `tests/product-boundary.test.mjs` protects actual React wiring.
+- `App` now owns session-local state and commits each transfer synchronously through a ref to avoid duplicate spending on rapid events; `TransferForm` shows real inline validation errors and an explicit no-chain simulation receipt. Wallet, activity and network labels disclose sample status at each component. No provider calls, secrets or genuine addresses.
+- **Verification:** code committed to current Draft PR #1; full frozen npm install / Node tests / TypeScript / ESLint / Vite build and browser mobile QA on the latest head **NOT YET VERIFIED**. Exact-head CI was queued during this checkpoint; previous green checks belong to a different SHA. No merge, blockchain settlement, real wallet, secret or production changes. Overall **PARTIAL**, test and browser QA pending.
