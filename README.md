@@ -257,3 +257,9 @@ TransferWallet explores the difficult product boundary between a simple “send 
 ## License
 
 See repository files for licensing information and review Stripe / TRON SDK and provider terms separately.
+
+## 2026-10-12 — functional session-only transfers
+
+The wallet simulation now has a usable end-to-end **mock send** flow, rather than an inert button that only logged recipient details to browser developer tools. Select one of two explicitly fictitious demo wallets, choose a token from the sample balances, enter a 1–6 decimal-place positive amount and click **Simulate transfer**. The displayed demo balance is reduced, a mock activity entry appears, and the form shows an explicit success/error state. Amounts are checked in integer micro-units to avoid fractional overspend and invalid scientific notation.
+
+No real blockchain address is entered, retained or logged. No wallet, signature, API request, settlement or provider is involved. The demo session resets on reload and uses no persistence or monetary value. Full responsive and current-head CI must still pass before the draft PR can be merged.
