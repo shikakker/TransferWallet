@@ -44,7 +44,14 @@ export function simulateDemoTransfer(
     return { ok: false, error: 'Sample balance is invalid.' };
   }
 
-  const available = BigInt(Math.round(source.balance * Number(MICROS)));
+  // Refuse floating sample balances that cannot represent whole micro-units.
+  // Rounding such balances could allow an overdraft or precision loss.
+  const balanceMicros = source.balance * Number(MICROS);
+  const roundedMicros = Math.round(balanceMicros);
+  if (!Number.isSafeInteger(roundedMicros) || Math.abs(balanceMicros - roundedMicros) > 1e-6) {
+    return { ok: false, error: 'Sample balance precision is invalid.' };
+  }
+  const available = BigInt(roundedMicros);
   if (micros > available) return { ok: false, error: 'Insufficient simulated balance.' };
 
   const balance = Number(available - micros) / Number(MICROS);
