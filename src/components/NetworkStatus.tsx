@@ -14,7 +14,7 @@ export function NetworkStatus({ status }: NetworkStatusProps) {
         'text-red-500'
       }`} />
       <span className="text-sm font-medium">
-        Network: {status.status} ({status.latency}ms)
+        Sample network indicator: {status.status} (fictional {status.latency}ms)
       </span>
     </div>
   );
