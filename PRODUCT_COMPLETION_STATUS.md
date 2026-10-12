@@ -94,3 +94,11 @@ The temporary write-capable workflow was removed after verification. Permanent Q
 - Build logged an outdated Browserslist database notice and deprecation of `punycode`; these are warnings to address in later dependency QA, not ignored failed gates.
 - These results verify the actual new state/calculation/form code, not browser tap targets, screen-reader operation, wallet/payment infrastructure or hosted preview. A subsequent status-only commit does not modify the tested runtime but requires its own exact-head CI check.
 - **Status:** CODE QUALITY PASS / HOSTED BROWSER+VERCEL NOT VERIFIED; overall **PARTIAL**. Keep Draft PR #1, no merge or real transaction.
+
+## 2026-10-13 — P1 fractional micro-unit balance overdraw
+
+- **Root cause:** `simulateDemoTransfer` rounded a floating `source.balance * 1_000_000` up to the nearest integer, permitting an attempted transfer of 0.000001 TRX from a sample balance of 0.0000006 TRX. Extreme balances also lost safe integer precision before `BigInt` conversion.
+- Test-first `tests/demo-transfer-balance-integrity.test.mjs` commit `afdc605` reproduced **2/3 tests failing** on the exact original blob SHA `c413272a35b0edef94d9af70335e7b365d2a9098` in Node 22.
+- Minimal fix `d97534c`: accept only finite sample balances convertible to safe integer micro-units within a small IEEE-754 representation tolerance, rejecting fractional micro-units and unsafe amounts before debiting.
+- Exact code blob `915ea9305d125097330c07f2f7a3414995352042` matches local updated code. Independently executed this with the exact existing `tests/demo-transfer.test.mjs` SHA `e02d496e695218b94b17dd6725c6361579a92c0e` plus 3 new tests: **6/6 Node 22 PASS**. Existing UI source-contract test, full npm ci, typecheck/lint/Vite, hosted browser and Vercel preview **NOT RERUN** on this new head.
+- Core demo balance correctness **DONE IN CODE / release QA PENDING**. Existing [Draft PR #1](https://github.com/shikakker/TransferWallet/pull/1) unmerged; no real payments, chain calls, secrets or production promotion.
