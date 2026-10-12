@@ -16,3 +16,15 @@ test('canonical TSX source does not contain accidental escaped-newline tokens', 
   const app = read('src/App.tsx');
   assert.doesNotMatch(app, />\\n\s*</);
 });
+
+test('demo transfer form uses fixed fictitious recipients and updates a local balance, never logs an address', () => {
+  const form = read('src/components/TransferForm.tsx');
+  const app = read('src/App.tsx');
+  assert.doesNotMatch(form, /console\.log\(|Enter TRON address|Send Tokens/);
+  assert.match(form, /Demo Wallet A/);
+  assert.match(form, /Simulate transfer/);
+  assert.match(app, /simulateDemoTransfer\(/);
+  assert.match(app, /setWalletState\(/);
+  assert.match(form, /role="alert"/);
+  assert.match(form, /role="status"/);
+});
