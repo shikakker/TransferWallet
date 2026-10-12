@@ -1,3 +1,5 @@
+import { useRef, useState } from 'react';
+import { simulateDemoTransfer, type DemoWalletState } from './lib/demoTransfer';
 import { WalletCard } from './components/WalletCard';
 import { TransferForm } from './components/TransferForm';
 import { TransactionList } from './components/TransactionList';
@@ -39,6 +41,20 @@ const networkStatus: NetworkStatusType = {
 };
 
 function App() {
+  const [walletState, setWalletState] = useState<DemoWalletState>({
+    balances: demoBalances,
+    transactions: demoTransactions,
+  });
+  const stateRef = useRef(walletState);
+
+  const handleSimulatedTransfer = (token: string, amount: string, recipient: string): string | null => {
+    const result = simulateDemoTransfer(stateRef.current, token, amount, recipient);
+    if (!result.ok) return result.error;
+    stateRef.current = result.state;
+    setWalletState(result.state);
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8">
@@ -58,12 +74,12 @@ function App() {
               <div className="mb-2 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
                 Simulated wallet data
               </div>
-              <WalletCard address={demoAddress} balances={demoBalances} />
+              <WalletCard address={demoAddress} balances={walletState.balances} />
             </div>
-            <TransactionList transactions={demoTransactions} />
+            <TransactionList transactions={walletState.transactions} />
           </div>
           <div>
-            <TransferForm />
+            <TransferForm balances={walletState.balances} onSimulate={handleSimulatedTransfer} />
           </div>
         </div>
       </div>
