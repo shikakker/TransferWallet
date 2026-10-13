@@ -12,6 +12,7 @@ export type DemoTransferResult =
   | { ok: false; error: string };
 
 const MICROS = 1_000_000n;
+export const MAX_DEMO_TRANSACTIONS = 100;
 
 function toMicros(value: string): bigint | null {
   if (!/^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,6})?$/.test(value)) return null;
@@ -72,7 +73,7 @@ export function simulateDemoTransfer(
     ok: true,
     state: {
       balances: tokens.map(item => item.symbol === token ? { ...item, balance, usdValue } : { ...item }),
-      transactions: [transaction, ...current.transactions],
+      transactions: [transaction, ...current.transactions].slice(0, MAX_DEMO_TRANSACTIONS),
     },
   };
 }
