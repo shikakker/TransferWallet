@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
 import { Transaction } from '../types';
 
@@ -9,7 +8,8 @@ interface TransactionListProps {
 export function TransactionList({ transactions }: TransactionListProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-      <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
+      <h2 className="text-xl font-semibold mb-1">Simulated activity</h2>
+      <p className="text-xs text-amber-700 mb-4">Sample history and this session’s mock transfers. No blockchain records.</p>
       
       <div className="space-y-4">
         {transactions.map((tx) => (
@@ -40,7 +40,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                   tx.status === 'failed' ? 'text-red-600' :
                   'text-yellow-600'
                 }`}>
-                  {tx.status}
+                  {tx.status} (demo)
                 </span>
               </div>
               <p className="text-sm text-gray-500">

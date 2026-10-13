@@ -1,4 +1,5 @@
-import React from 'react';
+import { useRef, useState } from 'react';
+import { simulateDemoTransfer, type DemoWalletState } from './lib/demoTransfer';
 import { WalletCard } from './components/WalletCard';
 import { TransferForm } from './components/TransferForm';
 import { TransactionList } from './components/TransactionList';
@@ -40,21 +41,45 @@ const networkStatus: NetworkStatusType = {
 };
 
 function App() {
+  const [walletState, setWalletState] = useState<DemoWalletState>({
+    balances: demoBalances,
+    transactions: demoTransactions,
+  });
+  const stateRef = useRef(walletState);
+
+  const handleSimulatedTransfer = (token: string, amount: string, recipient: string): string | null => {
+    const result = simulateDemoTransfer(stateRef.current, token, amount, recipient);
+    if (!result.ok) return result.error;
+    stateRef.current = result.state;
+    setWalletState(result.state);
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">TRON Wallet</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">TRON Wallet Demo</h1>
+            <p className="mt-1 text-sm text-amber-700">
+              Simulation only — balances, activity, and network status below are sample data. No live wallet is connected.
+            </p>
+          </div>
           <NetworkStatus status={networkStatus} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
-            <WalletCard address={demoAddress} balances={demoBalances} />
-            <TransactionList transactions={demoTransactions} />
+            <div>
+              <div className="mb-2 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                Simulated wallet data
+              </div>
+              <WalletCard address={demoAddress} balances={walletState.balances} />
+            </div>
+            <TransactionList transactions={walletState.transactions} />
           </div>
           <div>
-            <TransferForm />
+            <TransferForm balances={walletState.balances} onSimulate={handleSimulatedTransfer} />
           </div>
         </div>
       </div>
